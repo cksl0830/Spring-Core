@@ -38,9 +38,15 @@
 - 해결 (**AppConfig**)     
 사용 영역과, 객체를 생성하고 구성(Configuration)하는 영역으로 분리           
 즉, 할인 정책을 변경해도 AppConfig가 있는 구성 영역만 변경하면 되고 사용 영역은 변경할 필요가 없음         
--> **_이를 DI 컨테이너라고 한다._**
-            
-            
+-> **_이를 DI 컨테이너라고 한다._**     
+
+- 스프링으로 전환    
+```
+@Configuration : AppConfig에 설정을 구성한다는 뜻의 @Configuration 을 붙여준다.    
+@Bean : 각 메서드에 @Bean 을 붙여준다. 이렇게 하면 스프링 컨테이너에 스프링 빈으로 등록한다.    
+ApplicationContext : 스프링 컨테이너 - >  AppConfig 를 사용해서 직접 객체를 생성하고 DI 했었지만, 이제 스프링 컨테이너를 통해서 사용한다.    
+applicationContext.getBean() : 스프링 빈은 이 메서드를 사용해서 찾을 수 있다.    
+```
 
 
                  
