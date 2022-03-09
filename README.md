@@ -44,7 +44,8 @@
 @Configuration : AppConfig에 설정을 구성한다는 뜻의 @Configuration 을 붙여준다.    
 @Bean : 각 메서드에 @Bean 을 붙여준다. 이렇게 하면 스프링 컨테이너에 스프링 빈으로 등록한다.    
 ApplicationContext : 스프링 컨테이너 - >  AppConfig 를 사용해서 직접 객체를 생성하고 DI 했었지만, 이제 스프링 컨테이너를 통해서 사용한다.    
-applicationContext.getBean() : 스프링 빈은 이 메서드를 사용해서 찾을 수 있다.    
+applicationContext.getBean() : 스프링 빈은 이 메서드를 사용해서 찾을 수 있다.
+* 참고: ApplicationContext 의 인터페이스 = BeanFactory 
 ```
 
 
