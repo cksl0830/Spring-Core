@@ -96,3 +96,17 @@ ROLE_INFRASTRUCTURE : 스프링이 내부에서 사용하는 빈
 2. @Bean 만 사용해도 스프링 빈으로 등록되지만, 싱글톤을 보장하지 않는다.    
 
    따라서, **_@Configuration_** 을 사용하여 싱글톤 보장! 
+
+
+## < 컴포넌트 스캔 > 
+
+- **@ComponentScan 은 @Component 가 붙은 모든 클래스를 스프링 빈으로 등록한다.**  
+1. AppConfig 같은 설정 정보에 @ComponentScan 을 붙여준다
+2. 각 클래스 구현체에 @Component 애노테이션을 붙여준다
+3. 생성자에 @Autowired 를 붙여서 의존관계를 자동으로 주입해준다  //getBean(MemberRepository.class) 와 동일
+4. @ComponentScan 이 붙은 설정 정보 클래스의 패키지가 시작 위치가 된다 (프로젝트 최상단 위치에 두는 것이 좋음)
+
+- **충돌**  
+1. 자동 vs 자동 : ConflictingBeanDefinitionException 예외 발생
+2. 수동 vs 자동 : 수동 빈이 자동 빈을 오버라이딩 해버린다 (수동 우선권)   
+:: 스프링부트에서 오류를 발생한다.
