@@ -110,3 +110,100 @@ ROLE_INFRASTRUCTURE : 스프링이 내부에서 사용하는 빈
 1. 자동 vs 자동 : ConflictingBeanDefinitionException 예외 발생
 2. 수동 vs 자동 : 수동 빈이 자동 빈을 오버라이딩 해버린다 (수동 우선권)   
 :: 스프링부트에서 오류를 발생한다.
+
+## < 의존관계 주입 > 
+
+- 생성자 주입 (권장)  
+```
+1. 생성자 호출시점에 딱 1번만 호출되는 것이 보장된다
+2. 불변, 필수 의존관계에 사용
+3. 생성자가 딱 1개만 있으면 @Autowired를 생략해도 자동 주입
+⭐️ 4. 생성자 주입을 사용하면 필드에 final 키워드를 사용할 수 있다
+```
+
+- 수정자 주입(setter 주입)  
+```
+1. 선택, 변경 가능성이 있는 의존관계에 사용
+2. 주입할 대상이 없어도 동작하게 하려면 @Autowired(required = false) 로 지정
+3. 생성자가 딱 1개만 있으면 @Autowired를 생략해도 자동 주입
+```
+
+- 옵션처리   
+```
+1. @Autowired(required=false) : 자동 주입할 대상이 없으면 수정자 메서드 자체가 호출 안됨 
+2. org.springframework.lang.@Nullable : 자동 주입할 대상이 없으면 null이 입력된다. 
+3. Optional<> : 자동 주입할 대상이 없으면 Optional.empty 가 입력된다.
+```
+
+- lombok 라이브러리    
+**@RequiredArgsConstructor 기능을 사용하면 final이 붙은 필드를 모아서 생성자를 자동으로 만들어준다**
+
+- 조회 빈이 2개 이상일 때 - 문제  
+1. @Autowired 는 타입(Type)으로 조회 (ac.getBean(DiscountPolicy.class 와 유사함)  
+2. 예를 들어, DiscountPolicy 의 하위 타입인 FixDiscountPolicy , RateDiscountPolicy 둘다 스프링 빈으로 선언하면  
+  --> 누구를 주입할지 알 수 없음  
+
+- 조회 빈이 2개 이상일 때 - 해결  
+1. @Qualifier : 빈 등록시 @Qualifier를 붙여 주고, 주입시에 @Qualifier를 붙여주고 등록한 이름을 적어준다. **(@Qualifier끼리 매칭)**   
+2. @Primary : @Primary 는 우선순위를 정하는 방법이다. @Autowired 시에 여러 빈이 매칭되면 @Primary 가 우선권을 가진다.  
+
+- #### 정리  
+```
+1. 조회 빈이 모두 필요할 때 **List, Map**  을 사용하자! 
+2. 편리한 자동 기능을 기본으로 사용하자! (업무로직 ex. 서비스, 컨트롤러, 비즈니스 요구사항 등..)
+3. 직접 등록하는 기술 지원 객체는 수동 등록하자! (기술지원로직 ex. AOP, DB연결, 공통 로그 처리 등..)
+4. 다형성을 적극 활용하는 비즈니스 로직은 수동 등록을 고민해보자!
+```
+
+
+## < 빈 생명주기 콜백 >
+
+#### 데이터베이스 커넥션 풀이나, 네트워크 소켓처럼 애플리케이션 시작 시점에 필요한 연결을 미리 해두고, 애플리케이션 종료 시점에 연결을 모두 종료하는 작업을 진행하려면, 객체의 초기화와 종료 작업이 필요하다.   
+
+- 스프링 빈의 이벤트 라이프사이클  
+**스프링컨테이너 생성 - 스프링빈 생성 - 의존관계 주입 - 초기화콜백 - 사용 - 소멸전콜백 - 스프링 종료**
+> 초기화 콜백: 빈이 생성되고, 빈의 의존관계 주입이 완료된 후 호출   
+> 소멸전 콜백: 빈이 소멸되기 직전에 호출
+
+- 방법   
+```
+1. @PostConstruct(초기화 콜백), @PreDestroy(소멸전 콜백) 애노테이션을 사용하자
+2. 코드를 고칠 수 없는 외부 라이브러리를 초기화, 종료해야 하면 @Bean 의 initMethod , destroyMethod 를 사용하자.
+```
+
+## < 빈 스코프 > 
+
+- 싱글톤타입 스코프: 스프링 컨테이너에 계속 요청이 와도 같은 객체 인스턴스의 스프링 빈을 반환  
+- 프로토타입 스코프: 스프링 컨테이너는 프로토타입 빈을 생성하고, 의존관계 주입, 초기화까지만 처리 즉, **요청할 때 마다 새로 생성**      
+  --> 클라이언트가 관리해야하고 @PreDestroy 같은 종료 메서드가 호출되지 않는다.  
+- 함께 사용시 : 싱글톤 빈은 생성 시점에만 의존관계 주입을 받기 때문에, 프로토타입 빈이 새로 생성되기는 하지만, 싱글톤 빈과 함께 계속 유지되어서 같은 프로토타입 빈 사용   
+
+- 해결 방법   
+1. ObjectFactory, ObjectProvider (스프링에 의존)  
+```
+private ObjectProvider<PrototypeBean> prototypeBeanProvider; 
+PrototypeBean prototypeBean = prototypeBeanProvider.getObject(); // 항상 새로운 빈 생성 
+```
+
+2. javax.inject.Provider (라이브러리 필요 / 자바 표준: 스프링이 아닌 다른 컨테이너에서도 사용 가능)     
+```
+private Provider<PrototypeBean> provider;
+PrototypeBean prototypeBean = provider.get(); // 항상 새로운 빈 생성 
+```
+
+## < 웹 스코프 > 
+
+- Request scope    
+**HTTP 요청 하나가 들어오고 나갈 때 까지 유지되는 스코프, 각각의 HTTP 요청마다 별도의 빈 인스턴스가 생성되고, 관리된다.**   
+```
+@Scope(value = "request") :: HTTP 요청 당 하나씩 생성되고, HTTP 요청이 끝나는 시점에 소멸
+ObjectProvider를 사용해야 빈 생성 정상처리 가능
+```
+> ![image](https://user-images.githubusercontent.com/60590737/158412053-5b0919bc-cec6-402e-8fc5-032413cad3d5.png)
+
+- 스코프와 프록시 (싱글톤 빈처럼 사용 가능하나 다름! 주의!)
+```
+@Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)  //인터페이스면 INTERFACES
+ObjectProvider 해주지 않아도 가짜 프록시 개체를 생성하여 주입
+```
+
